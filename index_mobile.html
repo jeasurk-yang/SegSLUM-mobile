@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEGSLUM Website</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.shapefile/leaflet.shapefile.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+
+        #header {
+            background-color: #0d3b66;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #header-left {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        #header-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        #header-right button {
+            background-color: #ffffff22;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #header-right button:hover {
+            background-color: #ffffff44;
+        }
+
+        #container {
+            display: flex;
+            height: calc(100% - 100px);
+        }
+
+        #sidebar {
+            width: 250px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border-right: 1px solid #ccc;
+            overflow-y: auto;
+        }
+
+        #sidebar.collapsed {
+            display: none;
+        }
+
+#map {
+    flex: 1;
+    height: 100%;
+    min-height: 600px; /* 보장용 */
+}
+
+        #footer {
+            height: 40px;
+            background-color: #0d3b66;
+            color: white;
+            text-align: center;
+            line-height: 40px;
+        }
+
+        .toggle-button {
+            margin-bottom: 10px;
+            background-color: #0d3b66;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            #header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            #header-left {
+                font-size: 20px;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            #header-right {
+                width: 100%;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                font-size: 14px;
+            }
+
+            #container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            #sidebar {
+                width: 100%;
+                max-height: 300px;
+                border-right: none;
+                border-bottom: 1px solid #ccc;
+            }
+
+            #map {
+                height: calc(100vh - 250px); /* Adjust depending on header/footer/sidebar */
+                width: 100%;
+            }
+
+            #footer {
+                font-size: 12px;
+            }
+
+            #header-right button {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            .toggle-button {
+                margin-right: 3px;
+            }
+        }
+    </style>
+
+
+</head>
+<body>
+    <div id="header">
+        <div id="header-left">
+	    <button id="toggleSidebarBtn" style="margin-right: 10px;">☰</button> 
+	    SegSLUM: Detecting slums with satellite imagery (Beta)</div>
+     
+    </div>
+    <div id="container">
+
+        <div id="sidebar">
+            <h3>Mumbai in India</h3>
+            <ul>
+                                <li><input type="checkbox" id="mumbai-jan-2016"> 2016 Jan</li>
+                                <li><input type="checkbox" id="mumbai-dec-2016"> 2016 Dec</li>
+                                <li><input type="checkbox" id="mumbai-oct-2018"> 2018 Oct</li>
+                                <li><input type="checkbox" id="mumbai-jan-2020"> 2020 Jan</li>
+                                <li><input type="checkbox" id="mumbai-oct-2021"> 2021 Oct</li>
+                                <li><input type="checkbox" id="mumbai-feb-2022"> 2022 Feb</li>
+                                <li><input type="checkbox" id="mumbai-jan-2023" checked> 2023 Jan</li>
+            </ul>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <div id="footer">
+        &copy; 2025 SegSLUM Project
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([19.096, 72.878], 17);
+
+        // Add scale control (bottom left)
+        L.control.scale({
+            position: 'bottomleft'
+        }).addTo(map);
+
+        // Define Wayback base layers
+        var defaultBaseLayer = L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: '&copy; Images from ESRI World Imagery Wayback'}).addTo(map);
+
+        var BaseLayer10321 = L.tileLayer('https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/default028mm/MapServer/tile/10321/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: '&copy; Images from ESRI World Imagery Wayback'});
+
+        var BaseLayer16062 = L.tileLayer('https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/default028mm/MapServer/tile/16062/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: '&copy; Images from ESRI World Imagery Wayback'});
+
+        var BaseLayer17825 = L.tileLayer('https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/default028mm/MapServer/tile/17825/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: '&copy; Images from ESRI World Imagery Wayback'});
+
+        var BaseLayer18289 = L.tileLayer('https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/default028mm/MapServer/tile/18289/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: '&copy; Images from ESRI World Imagery Wayback'});
+
+        var BaseLayer25521 = L.tileLayer('https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/default028mm/MapServer/tile/25521/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: '&copy; Images from ESRI World Imagery Wayback'});
+
+        var BaseLayer29387 = L.tileLayer('https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/default028mm/MapServer/tile/29387/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: '&copy; Images from ESRI World Imagery Wayback'});
+
+        var BaseLayer46399 = L.tileLayer('https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/default028mm/MapServer/tile/46399/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: '&copy; Images from ESRI World Imagery Wayback'
+        }).addTo(map);
+
+
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_10321_simplify25.json') // Ensure the file name matches your GeoJSON file
+            .then(response => response.json())
+            .then(data => {
+                // Create a GeoJSON layer from the loaded data
+                var mumbaiOct2021Polygon = L.geoJSON(data, {
+                    style: {
+                        color: "#ff0000",
+                        weight: 2,
+                        opacity: 0.5
+                    }
+                });
+
+                // Add event listener for checkbox to toggle polygon layer and switch base map
+                document.getElementById('mumbai-oct-2021').addEventListener('change', function (e) {
+                    if (e.target.checked) {
+                        mumbaiOct2021Polygon.addTo(map); // Add polygon layer
+                        BaseLayer10321.addTo(map); // Add alternate base layer
+                    } else {
+                        map.removeLayer(mumbaiOct2021Polygon); // Remove polygon layer
+                        map.removeLayer(BaseLayer10321); // Remove alternate layer
+                    }
+                });
+
+            });
+
+
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_16062_simplify25.json') // Ensure the file name matches your GeoJSON file
+            .then(response => response.json())
+            .then(data => {
+                // Create a GeoJSON layer from the loaded data
+                var mumbaiOct2018Polygon = L.geoJSON(data, {
+                    style: {
+                        color: "#fbff00",
+                        weight: 2,
+                        opacity: 0.5
+                    }
+                });
+
+                // Add event listener for checkbox to toggle polygon layer and switch base map
+                document.getElementById('mumbai-oct-2018').addEventListener('change', function (e) {
+                    if (e.target.checked) {
+                        mumbaiOct2018Polygon.addTo(map); // Add polygon layer
+                        BaseLayer16062.addTo(map); // Add alternate base layer
+                    } else {
+                        map.removeLayer(mumbaiOct2018Polygon); // Remove polygon layer
+                        map.removeLayer(BaseLayer16062); // Remove alternate layer
+                    }
+                });
+
+            });
+
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_17825_simplify25.json') // Ensure the file name matches your GeoJSON file
+            .then(response => response.json())
+            .then(data => {
+                // Create a GeoJSON layer from the loaded data
+                var mumbaiFeb2022Polygon = L.geoJSON(data, {
+                    style: {
+                        color: "#00ff0c",
+                        weight: 2,
+                        opacity: 0.5
+                    }
+                });
+
+                // Add event listener for checkbox to toggle polygon layer and switch base map
+                document.getElementById('mumbai-feb-2022').addEventListener('change', function (e) {
+                    if (e.target.checked) {
+                        mumbaiFeb2022Polygon.addTo(map); // Add polygon layer
+                        BaseLayer17825.addTo(map); // Add alternate base layer
+                    } else {
+                        map.removeLayer(mumbaiFeb2022Polygon); // Remove polygon layer
+                        map.removeLayer(BaseLayer17825); // Remove alternate layer
+                    }
+                });
+
+            });
+
+
+
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_18289_simplify25.json') // Ensure the file name matches your GeoJSON file
+            .then(response => response.json())
+            .then(data => {
+                // Create a GeoJSON layer from the loaded data
+                var mumbaiJan2020Polygon = L.geoJSON(data, {
+                    style: {
+                        color: "#00fff3",
+                        weight: 2,
+                        opacity: 0.5
+                    }
+                });
+
+                // Add event listener for checkbox to toggle polygon layer and switch base map
+                document.getElementById('mumbai-jan-2020').addEventListener('change', function (e) {
+                    if (e.target.checked) {
+                        mumbaiJan2020Polygon.addTo(map); // Add polygon layer
+                        BaseLayer18289.addTo(map); // Add alternate base layer
+                    } else {
+                        map.removeLayer(mumbaiJan2020Polygon); // Remove polygon layer
+                        map.removeLayer(BaseLayer18289); // Remove alternate layer
+                    }
+                });
+
+            });
+
+
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_25521_simplify25.json') // Ensure the file name matches your GeoJSON file
+            .then(response => response.json())
+            .then(data => {
+                // Create a GeoJSON layer from the loaded data
+                var mumbaiDec2016Polygon = L.geoJSON(data, {
+                    style: {
+                        color: "#0032ff",
+                        weight: 2,
+                        opacity: 0.5
+                    }
+                });
+
+                // Add event listener for checkbox to toggle polygon layer and switch base map
+                document.getElementById('mumbai-dec-2016').addEventListener('change', function (e) {
+                    if (e.target.checked) {
+                        mumbaiDec2016Polygon.addTo(map); // Add polygon layer
+                        BaseLayer25521.addTo(map); // Add alternate base layer
+                    } else {
+                        map.removeLayer(mumbaiDec2016Polygon); // Remove polygon layer
+                        map.removeLayer(BaseLayer25521); // Remove alternate layer
+                    }
+                });
+
+            });
+
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_29387_simplify25.json') // Ensure the file name matches your GeoJSON file
+            .then(response => response.json())
+            .then(data => {
+                // Create a GeoJSON layer from the loaded data
+                var mumbaiJan2016Polygon = L.geoJSON(data, {
+                    style: {
+                        color: "#ff00ff",
+                        weight: 2,
+                        opacity: 0.5
+                    }
+                });
+
+                // Add event listener for checkbox to toggle polygon layer and switch base map
+                document.getElementById('mumbai-jan-2016').addEventListener('change', function (e) {
+                    if (e.target.checked) {
+                        mumbaiJan2016Polygon.addTo(map); // Add polygon layer
+                        BaseLayer29387.addTo(map); // Add alternate base layer
+                    } else {
+                        map.removeLayer(mumbaiJan2016Polygon); // Remove polygon layer
+                        map.removeLayer(BaseLayer29387); // Remove alternate layer
+                    }
+                });
+
+            });
+
+
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_46399_simplify25.json') // Ensure the file name matches your GeoJSON file
+            .then(response => response.json())
+            .then(data => {
+                // Create a GeoJSON layer from the loaded data
+                var mumbaiJan2023Polygon = L.geoJSON(data, {
+                    style: {
+                        color: "#ff7800",
+                        weight: 2,
+                        opacity: 0.5
+                    }
+                });
+
+                // Add event listener for checkbox to toggle polygon layer and switch base map
+                document.getElementById('mumbai-jan-2023').addEventListener('change', function (e) {
+                    if (e.target.checked) {
+                        mumbaiJan2023Polygon.addTo(map); // Add polygon layer
+                    } else {
+                        map.removeLayer(mumbaiJan2023Polygon); // Remove polygon layer
+                        map.removeLayer(BaseLayer46399); // Remove alternate layer
+                    }
+                });
+
+                // Display polygon initially as checkbox is checked
+                mumbaiJan2023Polygon.addTo(map);
+            });
+
+
+
+        // Function to toggle subcategories
+        function toggleSubcategories(button) {
+            var subcategory = button.parentNode.querySelector("ul"); // Get the subcategory list
+            if (subcategory.style.display === "none" || subcategory.style.display === "") {
+                subcategory.style.display = "block"; // Show subcategories
+                button.classList.add('collapsed'); // Add collapsed class
+            } else {
+                subcategory.style.display = "none"; // Hide subcategories
+                button.classList.remove('collapsed'); // Remove collapsed class
+            }
+        }
+
+        // Function to movelocation
+        function moveToLocation(coords) {
+            map.setView(coords, 13);
+        }
+
+
+    // Expand only the "India: Mumbai" sub-category
+
+        document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
+             const sidebar = document.getElementById('sidebar');
+             sidebar.classList.toggle('collapsed');
+
+        setTimeout(() => {
+             map.invalidateSize();
+             }, 310); // CSS transition 시간(0.3s)보다 약간 더 길게
+
+        });
+
+    // 
+        window.addEventListener('DOMContentLoaded', function () {
+             const sidebar = document.getElementById('sidebar');
+             if (window.innerWidth < 768) {
+                 sidebar.classList.add('collapsed');
+
+                 setTimeout(() => {
+                     map.invalidateSize();
+                 }, 100);
+             }
+        });
+
+
+
+    </script>
+
+    <div id="welcome-popup" style="position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+        background-color: #d5fcff; border: 1px solid #ccc; padding: 20px; z-index: 1000;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 8px; max-width: 500px; width: 90%;">
+        <h3 style="text-align: center; margin-top: 0;">Welcome to SegSLUM (mobile)!</h3>
+        <div style="text-align: left; padding: 0 10px;">
+            <p>This interactive map helps you explore urban slums in Mumbai, India!</p>
+            <p>Using 60cm-per-pixel resolution satellite data, we developed an AI-method to detect slums over a decade period between 2016 and 2023.</p> 
+            <p>Our analysis identifies a trend of <strong style="background-color: #1affff; padding: 2px 4px; border-radius: 2px;">increasing slum coverage since 2020</strong>, contrary to projections in the UN-Habitat report which suggests a global decline in slum areas. The results for other cities will be uploaded in the mobile environments soon. </p>
+            <p>What stories will you uncover in the changing patterns of urban slums?</p>
+        </div>
+        <div style="text-align: center;">
+            <button onclick="document.getElementById('welcome-popup').style.display='none'"
+                style="margin-top: 10px; background-color: #007BFF; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                Close
+            </button>
+        </div>
+    </div>
+
+<script>
+    document.getElementById('toggleSidebarBtn').addEventListener('click', function () {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
+    });
+</script>
+
+
+</body>
+</html>
