@@ -153,7 +153,7 @@
     <div id="header">
         <div id="header-left">
 	    <button id="toggleSidebarBtn" style="margin-right: 10px;">☰</button> 
-	    SegSLUM: Detecting slums with satellite imagery (Beta)</div>
+	    SegSLUM: Detecting slums with satellite imagery (simplified polygons)</div>
      
     </div>
     <div id="container">
@@ -168,6 +168,7 @@
                                 <li><input type="checkbox" id="mumbai-oct-2021"> 2021 Oct</li>
                                 <li><input type="checkbox" id="mumbai-feb-2022"> 2022 Feb</li>
                                 <li><input type="checkbox" id="mumbai-jan-2023" checked> 2023 Jan</li>
+                                <li><input type="checkbox" id="mumbai-gt" checked> Municipal slum survey map 2016</li>
             </ul>
         </div>
         <div id="map"></div>
@@ -223,7 +224,7 @@
         }).addTo(map);
 
 
-        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_10321_simplify25.json') // Ensure the file name matches your GeoJSON file
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SegSLUM-mobile/refs/heads/main/IND_Mumbai_10321_simplify25.json') // Ensure the file name matches your GeoJSON file
             .then(response => response.json())
             .then(data => {
                 // Create a GeoJSON layer from the loaded data
@@ -249,7 +250,7 @@
             });
 
 
-        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_16062_simplify25.json') // Ensure the file name matches your GeoJSON file
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SegSLUM-mobile/refs/heads/main/IND_Mumbai_16062_simplify25.json') // Ensure the file name matches your GeoJSON file
             .then(response => response.json())
             .then(data => {
                 // Create a GeoJSON layer from the loaded data
@@ -274,7 +275,7 @@
 
             });
 
-        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_17825_simplify25.json') // Ensure the file name matches your GeoJSON file
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SegSLUM-mobile/refs/heads/main/IND_Mumbai_17825_simplify25.json') // Ensure the file name matches your GeoJSON file
             .then(response => response.json())
             .then(data => {
                 // Create a GeoJSON layer from the loaded data
@@ -301,7 +302,7 @@
 
 
 
-        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_18289_simplify25.json') // Ensure the file name matches your GeoJSON file
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SegSLUM-mobile/refs/heads/main/IND_Mumbai_18289_simplify25.json') // Ensure the file name matches your GeoJSON file
             .then(response => response.json())
             .then(data => {
                 // Create a GeoJSON layer from the loaded data
@@ -327,7 +328,7 @@
             });
 
 
-        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_25521_simplify25.json') // Ensure the file name matches your GeoJSON file
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SegSLUM-mobile/refs/heads/main/IND_Mumbai_25521_simplify25.json') // Ensure the file name matches your GeoJSON file
             .then(response => response.json())
             .then(data => {
                 // Create a GeoJSON layer from the loaded data
@@ -352,7 +353,7 @@
 
             });
 
-        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_29387_simplify25.json') // Ensure the file name matches your GeoJSON file
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SegSLUM-mobile/refs/heads/main/IND_Mumbai_29387_simplify25.json') // Ensure the file name matches your GeoJSON file
             .then(response => response.json())
             .then(data => {
                 // Create a GeoJSON layer from the loaded data
@@ -378,7 +379,7 @@
             });
 
 
-        fetch('https://raw.githubusercontent.com/jeasurk-yang/SEGSLUM/refs/heads/main/IND_Mumbai_46399_simplify25.json') // Ensure the file name matches your GeoJSON file
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SegSLUM-mobile/refs/heads/main/IND_Mumbai_46399_simplify25.json') // Ensure the file name matches your GeoJSON file
             .then(response => response.json())
             .then(data => {
                 // Create a GeoJSON layer from the loaded data
@@ -402,6 +403,30 @@
 
                 // Display polygon initially as checkbox is checked
                 mumbaiJan2023Polygon.addTo(map);
+            });
+
+
+        fetch('https://raw.githubusercontent.com/jeasurk-yang/SegSLUM-mobile/refs/heads/main/IND_Mumbai_GT.json')
+            .then(response => response.json())
+            .then(data => {
+                // Create a GeoJSON layer from the loaded data
+                var mumbaiGTPolygon = L.geoJSON(data, {
+                    style: {
+                        color: "#000080",
+                        weight: 2,
+                        opacity: 0.7
+                    }
+                });
+
+                // Add event listener for checkbox to toggle polygon layer and switch base map
+                document.getElementById('mumbai-gt').addEventListener('change', function (e) {
+                    if (e.target.checked) {
+                        mumbaiGTPolygon.addTo(map); 
+                    } else {
+                        map.removeLayer(mumbaiGTPolygon); 
+                    }
+                });
+
             });
 
 
@@ -455,7 +480,7 @@
     <div id="welcome-popup" style="position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
         background-color: #d5fcff; border: 1px solid #ccc; padding: 20px; z-index: 1000;
         box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 8px; max-width: 500px; width: 90%;">
-        <h3 style="text-align: center; margin-top: 0;">Welcome to SegSLUM (mobile)!</h3>
+        <h3 style="text-align: center; margin-top: 0;">Welcome to SegSLUM!</h3>
         <div style="text-align: left; padding: 0 10px;">
             <p>This interactive map helps you explore urban slums in Mumbai, India!</p>
             <p>Using 60cm-per-pixel resolution satellite data, we developed an AI-method to detect slums over a decade period between 2016 and 2023.</p> 
